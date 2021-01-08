@@ -1,0 +1,57 @@
+apiVersion: serverless.kyma-project.io/v1alpha1
+kind: Function
+metadata:
+  name: complaint-prev
+spec:
+  runtime: nodejs12
+  source: |
+    module.exports = {
+      main: function(event, context) {
+        console.log(process.env['CLIENT_ID'])
+        console.log(process.env['CLIENT_SECRET'])
+        console.log(process.env['DURABLE_FUNC_ENDPOINT'])
+        console.log(process.env['TOKEN_ENDPOINT_ABAP'])
+        console.log(process.env['BASE_URL_ABAP'])
+        console.log(process.env['ABAP_MOCK_SCOPE'])
+      }
+    }
+  deps: |
+    {
+      "name": "complaint-prev",
+      "version": "1.0.0",
+      "dependencies": {
+        "axios": "^0.21.1",
+        "qs": "^6.9.4"
+      }
+    }  
+  env:
+    - name: CLIENT_ID
+      valueFrom:
+        secretKeyRef:
+          key: clientid
+          name: secretforfunction
+    - name: CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          key: clientsecret
+          name: secretforfunction
+    - name: DURABLE_FUNC_ENDPOINT
+      valueFrom:
+        secretKeyRef:
+          key: durabelfuncendpoint
+          name: secretforfunction
+    - name: TOKEN_ENDPOINT_ABAP
+      valueFrom:
+        configMapKeyRef:
+          key: tokenendpointabap
+          name: configforfunction
+    - name: BASE_URL_ABAP
+      valueFrom:
+        configMapKeyRef:
+          key: baseurlabap
+          name: configforfunction
+    - name: ABAP_MOCK_SCOPE
+      valueFrom:
+        configMapKeyRef:
+          key: abapmockscope
+          name: configforfunction
