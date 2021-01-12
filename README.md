@@ -1,6 +1,6 @@
 # Deployment and Code for Kyma Function
 
-![Overview](./pics/Overview_Kyma.png)
+![Overview](./pics/Overview_Kyma_WhiteBG.png)
 
 This repository contains the source code for the Kyma function including all files relevant for deploying the function as well as the config map and the secrets to Kyma.
 
