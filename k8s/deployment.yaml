@@ -4,26 +4,6 @@ metadata:
   name: complaint-prev
 spec:
   runtime: nodejs12
-  source: |
-    module.exports = {
-      main: function(event, context) {
-        console.log(process.env['CLIENT_ID'])
-        console.log(process.env['CLIENT_SECRET'])
-        console.log(process.env['DURABLE_FUNC_ENDPOINT'])
-        console.log(process.env['TOKEN_ENDPOINT_ABAP'])
-        console.log(process.env['BASE_URL_ABAP'])
-        console.log(process.env['ABAP_MOCK_SCOPE'])
-      }
-    }
-  deps: |
-    {
-      "name": "complaint-prev",
-      "version": "1.0.0",
-      "dependencies": {
-        "axios": "^0.21.1",
-        "qs": "^6.9.4"
-      }
-    }  
   env:
     - name: CLIENT_ID
       valueFrom:
@@ -55,3 +35,144 @@ spec:
         configMapKeyRef:
           key: abapmockscope
           name: configforfunction
+  deps: |
+    {
+      "name": "complaint-prev",
+      "version": "1.0.0",
+      "dependencies": {
+        "axios": "^0.21.1",
+        "qs": "^6.9.4"
+      }
+    }
+  source: |
+    const axios = require("axios")
+    const qs = require("qs")
+    const commerceUrl = process.env['SAP_COMMERCE_CLOUD_COMMERCE_WEBSERVICES_79BAA5B6_4084_458E_A876_7AF9944D1E47_GATEWAY_URL']
+
+    module.exports = {
+      main: async function (event, context) {
+        const orderCode = event.data.orderCode
+        const orderStatus = event.data.orderStatus
+
+       console.log(`Order Number from event is: ${orderCode}`)
+       console.log(`Order Status from event is: ${orderStatus}`)
+
+        if (orderStatus === "DELAYED") {
+          var orderResult = await getOrderDetails(orderCode)
+          console.log("----------orderResult----------")
+          console.log(`Business Partner for Order is: ${orderResult.bpId}`)
+
+          try {
+
+            const respBearerABAP = await getBearerToken4ABAP()
+
+            const orderHistory = await getOrderHistoryABAP(respBearerABAP, orderResult.bpId)
+
+            console.log(orderHistory)
+
+            const sentimentResult = await getSentimentAnalysis(orderHistory)
+
+            console.log(sentimentResult)
+
+          } catch (err) {
+            console.error(err);
+          }
+
+        }
+        else {
+          console.log("No issues with order, nothing to do")
+        }
+
+      }
+     }
+
+    async function getOrderDetails(orderCode) {
+      const ordersUrl = commerceUrl + "/electronics/orders/" + orderCode
+      const response = await axios.get(ordersUrl)
+      return response.data
+     }
+
+    async function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function getBearerToken4ABAP() {
+
+      let data = {
+        grant_type: "client_credentials",
+        scope: process.env['ABAP_MOCK_SCOPE']
+      }
+
+      let auth = {
+        username: process.env['CLIENT_ID'],
+        password: process.env['CLIENT_SECRET'],
+      }
+
+      let optionsToken = {
+        method: "post",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        data: qs.stringify(data),
+        auth: auth,
+        url: process.env['TOKEN_ENDPOINT_ABAP'],
+      }
+
+      const resp = await axios(optionsToken)
+
+      return resp
+
+     }
+
+    async function getOrderHistoryABAP(tokenABAP, bpId) {
+
+      const configOrderHistory = {
+        headers: { Authorization: `${tokenABAP.data.token_type} ${tokenABAP.data.access_token}` }
+      }
+
+      axios.defaults.headers.get['Content-Type'] = 'application/json'
+
+      const orderHistory = await axios.get(`${process.env['BASE_URL_ABAP']}/orderhistory?bpid=${bpId}`, configOrderHistory)
+
+      return orderHistory
+     }
+
+    async function getSentimentAnalysis(orderHistoryInput) {
+
+      let options = {
+        method: "GET",
+        data: orderHistoryInput.data,
+        url: process.env['DURABLE_FUNC_ENDPOINT']
+      }
+
+      const durableStatus = await axios(options)
+
+      if (durableStatus.status == "202") {
+
+        let retry = true
+        let result
+
+        while (retry === true) {
+
+          await sleep(3000)
+
+          let responseStatus = await axios.get(durableStatus.data.statusQueryGetUri)
+
+          if (responseStatus.data.runtimeStatus == "Completed" || responseStatus.data.runtimeStatus == "Failed") {
+            retry = false
+            result = responseStatus.data.output
+          }
+          else {
+            console.log(responseStatus.data.runtimeStatus)
+          }
+
+        }
+
+        return result
+
+      }
+      else {
+        console.log("ERROR, ERROR, ERROR")
+      }
+
+     }
