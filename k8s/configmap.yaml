@@ -8,3 +8,5 @@ data:
   tokenendpointabap: https://oauth2.<YOUR_CLUSTER>.kyma.shoot.live.k8s-hana.ondemand.com/oauth2/token
   baseurlabap: https://abap-mock-in-go.<YOUR_CLUSTER>.kyma.shoot.live.k8s-hana.ondemand.com
   abapmockscope: orderhistaccessscope
+  brmoauthurl: <YOUR_TOKEN_ENDPOINT>
+  brmruleexecurl: https://bpmruleruntime.cfapps.us10.hana.ondemand.com/rules-service/rest/v2/workingset-rule-services

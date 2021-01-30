@@ -1,0 +1,72 @@
+name: complaint-prev
+namespace: cx-extension
+runtime: nodejs12
+source:
+    sourceType: inline
+    sourcePath: C:\Users\Lechner\projects\PetProject2021\Kyma\function\kyma_cli
+env:
+    - name: CLIENT_ID
+      valueFrom:
+          secretKeyRef:
+              key: clientid
+              name: secretforfunction
+    - name: CLIENT_SECRET
+      valueFrom:
+          secretKeyRef:
+              key: clientsecret
+              name: secretforfunction
+    - name: DURABLE_FUNC_ENDPOINT
+      valueFrom:
+          secretKeyRef:
+              key: durabelfuncendpoint
+              name: secretforfunction
+    - name: BRM_OAUTH_USER
+      valueFrom:
+          secretKeyRef:
+              key: brmoauthusername
+              name: secretforfunction
+    - name: BRM_OAUTH_PW
+      valueFrom:
+          secretKeyRef:
+              key: brmoauthpassword
+              name: secretforfunction
+    - name: BRM_CLIENT_ID
+      valueFrom:
+          secretKeyRef:
+              key: brmclientid
+              name: secretforfunction
+    - name: BRM_CLIENT_SECRET
+      valueFrom:
+          secretKeyRef:
+              key: brmclientsecret
+              name: secretforfunction
+    - name: RULE_SERVICE_ID
+      valueFrom:
+          secretKeyRef:
+              key: ruleserviceid
+              name: secretforfunction
+    - name: TOKEN_ENDPOINT_ABAP
+      valueFrom:
+          configMapKeyRef:
+              key: tokenendpointabap
+              name: configforfunction
+    - name: BASE_URL_ABAP
+      valueFrom:
+          configMapKeyRef:
+              key: baseurlabap
+              name: configforfunction
+    - name: ABAP_MOCK_SCOPE
+      valueFrom:
+          configMapKeyRef:
+              key: abapmockscope
+              name: configforfunction
+    - name: BRM_OAUTH_URL
+      valueFrom:
+          configMapKeyRef:
+              key: brmoauthurl
+              name: configforfunction
+    - name: BRM_RULEEXEC_URL
+      valueFrom:
+          configMapKeyRef:
+              key: brmruleexecurl
+              name: configforfunction
